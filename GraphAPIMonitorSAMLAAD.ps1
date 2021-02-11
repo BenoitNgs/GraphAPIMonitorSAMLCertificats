@@ -55,43 +55,41 @@ Function zGet-AADAppsEnterpriseSAMLCertStatus{
 
     foreach($AADApps in $lstAADApps){
 
-        #if($AADApps.preferredSingleSignOnMode -eq "saml"){
-
         if(!$([string]::IsNullOrEmpty($AADApps.preferredTokenSigningKeyThumbprint))){
-        
-            $dataCollect = New-Object System.object
-            $dataCollect | Add-Member -name ‘AppDisplayName’ -MemberType NoteProperty -Value $AADApps.displayName
-            $dataCollect | Add-Member -name ‘AppId’ -MemberType NoteProperty -Value $AADApps.appId
-            $dataCollect | Add-Member -name ‘id’ -MemberType NoteProperty -Value $AADApps.id
-            $dataCollect | Add-Member -name ‘preferredSingleSignOnMode’ -MemberType NoteProperty -Value $AADApps.preferredSingleSignOnMode
-            $dataCollect | Add-Member -name ‘preferredTokenSigningKeyThumbprint’ -MemberType NoteProperty -Value $AADApps.preferredTokenSigningKeyThumbprint
 
-            $dataCollect | Add-Member -name ‘passwordCredentialscustomKeyIdentifier’ -MemberType NoteProperty -Value $AADApps.passwordCredentials[0].customKeyIdentifier
-            $dataCollect | Add-Member -name ‘passwordCredentialsendDateTime’ -MemberType NoteProperty -Value $AADApps.passwordCredentials[0].endDateTime
-            $dataCollect | Add-Member -name ‘passwordCredentialskeyId’ -MemberType NoteProperty -Value $AADApps.passwordCredentials[0].keyId
-            $dataCollect | Add-Member -name ‘passwordCredentialsTTLInDays’ -MemberType NoteProperty -Value $(New-TimeSpan –Start $(get-date) -End $(get-date $AADApps.passwordCredentials[0].endDateTime)).Days
-            
-            
+            foreach($AADAppsPasswordCredentials in $AADApps.passwordCredentials){
 
-            foreach($AADAppsKeyCredentials in $AADApps.keyCredentials){
-                if($AADAppsKeyCredentials.usage -eq "Sign"){
-                    $dataCollect | Add-Member -name ‘keyCredentialsSignCustomKeyIdentifier’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.customKeyIdentifier
-                    $dataCollect | Add-Member -name ‘keyCredentialsSignDisplayName’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.displayName
-                    $dataCollect | Add-Member -name ‘keyCredentialsSignEndDateTime’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.endDateTime
-                    $dataCollect | Add-Member -name ‘keyCredentialsSignKeyId’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.keyId
-                    $dataCollect | Add-Member -name ‘keyCredentialsSignTTLInDays’ -MemberType NoteProperty -Value $(New-TimeSpan –Start $(get-date) -End $(get-date $AADAppsKeyCredentials.endDateTime)).Days
+                $dataCollect = New-Object System.object
+                $dataCollect | Add-Member -name ‘AppDisplayName’ -MemberType NoteProperty -Value $AADApps.displayName
+                $dataCollect | Add-Member -name ‘AppId’ -MemberType NoteProperty -Value $AADApps.appId
+                $dataCollect | Add-Member -name ‘id’ -MemberType NoteProperty -Value $AADApps.id
+                $dataCollect | Add-Member -name ‘preferredSingleSignOnMode’ -MemberType NoteProperty -Value $AADApps.preferredSingleSignOnMode
+                $dataCollect | Add-Member -name ‘preferredTokenSigningKeyThumbprint’ -MemberType NoteProperty -Value $AADApps.preferredTokenSigningKeyThumbprint
+
+                $dataCollect | Add-Member -name ‘passwordCredentialscustomKeyIdentifier’ -MemberType NoteProperty -Value $AADAppsPasswordCredentials.customKeyIdentifier
+                $dataCollect | Add-Member -name ‘passwordCredentialsendDateTime’ -MemberType NoteProperty -Value $AADAppsPasswordCredentials.endDateTime
+                $dataCollect | Add-Member -name ‘passwordCredentialskeyId’ -MemberType NoteProperty -Value $AADAppsPasswordCredentials.keyId
+                $dataCollect | Add-Member -name ‘passwordCredentialsTTLInDays’ -MemberType NoteProperty -Value $(New-TimeSpan –Start $(get-date) -End $(get-date $AADAppsPasswordCredentials.endDateTime)).Days
+ 
+                foreach($AADAppsKeyCredentials in $AADApps.keyCredentials){
+                    if($AADAppsKeyCredentials.usage -eq "Sign" -and $AADAppsKeyCredentials.customKeyIdentifier -eq $AADAppsPasswordCredentials.customKeyIdentifier){
+                        $dataCollect | Add-Member -name ‘keyCredentialsSignCustomKeyIdentifier’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.customKeyIdentifier
+                        $dataCollect | Add-Member -name ‘keyCredentialsSignDisplayName’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.displayName
+                        $dataCollect | Add-Member -name ‘keyCredentialsSignEndDateTime’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.endDateTime
+                        $dataCollect | Add-Member -name ‘keyCredentialsSignKeyId’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.keyId
+                        $dataCollect | Add-Member -name ‘keyCredentialsSignTTLInDays’ -MemberType NoteProperty -Value $(New-TimeSpan –Start $(get-date) -End $(get-date $AADAppsKeyCredentials.endDateTime)).Days
+                    }
+
+                    if($AADAppsKeyCredentials.usage -eq "Verify" -and $AADAppsKeyCredentials.customKeyIdentifier -eq $AADAppsPasswordCredentials.customKeyIdentifier){
+                        $dataCollect | Add-Member -name ‘keyCredentialsVerifyCustomKeyIdentifier’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.customKeyIdentifier
+                        $dataCollect | Add-Member -name ‘keyCredentialsVerifyDisplayName’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.displayName
+                        $dataCollect | Add-Member -name ‘keyCredentialsVerifyEndDateTime’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.endDateTime
+                        $dataCollect | Add-Member -name ‘keyCredentialsVerifyKeyId’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.keyId
+                        $dataCollect | Add-Member -name ‘keyCredentialsVerifyTTLInDays’ -MemberType NoteProperty -Value $(New-TimeSpan –Start $(get-date) -End $(get-date $AADAppsKeyCredentials.endDateTime)).Days
+                    }
                 }
-
-                if($AADAppsKeyCredentials.usage -eq "Verify"){
-                    $dataCollect | Add-Member -name ‘keyCredentialsVerifyCustomKeyIdentifier’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.customKeyIdentifier
-                    $dataCollect | Add-Member -name ‘keyCredentialsVerifyDisplayName’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.displayName
-                    $dataCollect | Add-Member -name ‘keyCredentialsVerifyEndDateTime’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.endDateTime
-                    $dataCollect | Add-Member -name ‘keyCredentialsVerifyKeyId’ -MemberType NoteProperty -Value $AADAppsKeyCredentials.keyId
-                    $dataCollect | Add-Member -name ‘keyCredentialsVerifyTTLInDays’ -MemberType NoteProperty -Value $(New-TimeSpan –Start $(get-date) -End $(get-date $AADAppsKeyCredentials.endDateTime)).Days
-                }
+                $res += $dataCollect                
             }
-
-            $res += $dataCollect
         }
     }
 
